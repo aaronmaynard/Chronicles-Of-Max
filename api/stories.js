@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
             const files = await fs.readdir(storiesPath);
             const textFiles = files.filter(file => {
                 const ext = path.extname(file).toLowerCase();
-                return ['.txt', '.md', '.html', '.pdf', '.rtf'].includes(ext);
+                return ['.txt', '.md', '.html', '.rtf'].includes(ext);
             });
 
             for (const file of textFiles) {
@@ -87,31 +87,6 @@ module.exports = async (req, res) => {
                             description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
                             console.log('RTF fallback - title:', title, 'description:', description);
                         }
-                    } else if (fileExtension === '.pdf') {
-                        // For PDFs, provide better fallback content based on filename
-                        const nameWithoutExt = path.parse(file).name;
-                        title = nameWithoutExt.replace(/[-_]/g, ' ');
-                        
-                        // Provide contextual descriptions based on the title
-                        if (title.toLowerCase().includes('seeress')) {
-                            description = 'In the frozen fjords of the North, a seeress encounters an unexpected visitor. Max\'s arrival brings both wisdom and chaos to the ancient rituals...';
-                            author = 'AARON MAYNARD';
-                        } else if (title.toLowerCase().includes('fire')) {
-                            description = 'The Great Fire of London, 1666. While history records the blaze that consumed the city, few know of the demon cat who may have had a paw in the disaster...';
-                            author = 'AARON MAYNARD';
-                        } else if (title.toLowerCase().includes('trojan')) {
-                            description = 'The fall of Troy is legendary, but what if the famous wooden horse wasn\'t the only surprise the Trojans received? Max\'s perspective on ancient warfare...';
-                            author = 'AARON MAYNARD';
-                        } else if (title.toLowerCase().includes('castle')) {
-                            description = 'Medieval times were full of intrigue, but none expected a demon cat to be the catalyst for one of history\'s longest conflicts...';
-                            author = 'AARON MAYNARD';
-                        } else if (title.toLowerCase().includes('space')) {
-                            description = 'The Space Race was humanity\'s greatest achievement, but Max\'s brief stint as a NASA mascot almost changed the course of history...';
-                            author = 'AARON MAYNARD';
-                        } else {
-                            description = `A tale from Max's long exile on Earth. This story explores one of the many historical events that may have been influenced by a certain demon cat...`;
-                            author = 'AARON MAYNARD';
-                        }
                     } else {
                         // Handle text files
                         const content = await fs.readFile(filePath, 'utf8');
@@ -145,8 +120,8 @@ module.exports = async (req, res) => {
                         }
                     }
                     
-                    // For PDFs and RTFs, use GitHub raw URL; for others, use relative path
-                    const filePath = (fileExtension === '.pdf' || fileExtension === '.rtf')
+                    // For RTFs, use GitHub raw URL; for others, use relative path
+                    const storyUrl = fileExtension === '.rtf'
                         ? `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`
                         : `/stories/${file}`;
                     
@@ -154,7 +129,7 @@ module.exports = async (req, res) => {
                         title: title,
                         author: author,
                         filename: file,
-                        path: filePath,
+                        path: storyUrl,
                         description: description,
                         fileSize: stats.size,
                         lastModified: stats.mtime.toISOString(),
