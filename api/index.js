@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs').promises;
-const sharp = require('sharp');
-const pdfParse = require('pdf-parse');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -118,35 +116,11 @@ class FileScanner {
         }
     }
 
-    // Generate thumbnail for comic
+    // Generate thumbnail for comic (simplified for Vercel)
     async generateThumbnail(imagePath, seriesName, filename) {
-        try {
-            const thumbnailDir = path.join(this.thumbnailsPath, seriesName);
-            await fs.mkdir(thumbnailDir, { recursive: true });
-            
-            const thumbnailPath = path.join(thumbnailDir, `thumb_${filename}`);
-            
-            // Check if thumbnail already exists and is newer than source
-            try {
-                const thumbStats = await fs.stat(thumbnailPath);
-                const sourceStats = await fs.stat(imagePath);
-                if (thumbStats.mtime > sourceStats.mtime) {
-                    return `/thumbnails/${seriesName}/thumb_${filename}`;
-                }
-            } catch (e) {
-                // Thumbnail doesn't exist, create it
-            }
-            
-            await sharp(imagePath)
-                .resize(300, 300, { fit: 'inside', withoutEnlargement: true })
-                .jpeg({ quality: 80 })
-                .toFile(thumbnailPath);
-            
-            return `/thumbnails/${seriesName}/thumb_${filename}`;
-        } catch (error) {
-            console.error(`Error generating thumbnail for ${filename}:`, error);
-            return null;
-        }
+        // For now, return null to avoid sharp dependency issues in Vercel
+        // Thumbnails can be generated locally and uploaded
+        return null;
     }
 
     // Scan stories directory
@@ -193,11 +167,11 @@ class FileScanner {
         try {
             let content = '';
             
-            // Handle PDF files
+            // Handle PDF files (simplified for Vercel)
             if (fileExtension === '.pdf') {
-                const pdfBuffer = await fs.readFile(filePath);
-                const pdfData = await pdfParse(pdfBuffer);
-                content = pdfData.text;
+                // For PDFs, just use filename as title for now
+                // PDF parsing can be added back later with proper Vercel configuration
+                content = `PDF file: ${filename}`;
             } else {
                 // Handle text files
                 content = await fs.readFile(filePath, 'utf8');
