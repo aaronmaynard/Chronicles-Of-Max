@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chronicles of Max - Demon Cat Comics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caudex:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <h1 class="logo">The Chronicles of Max</h1>
+                <p class="tagline">A Demon Cat's Guide to Chaos</p>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#comics" class="nav-link">Comics</a></li>
+                <li><a href="#stories" class="nav-link">Short Stories</a></li>
+                <li><a href="#artwork" class="nav-link">Artwork</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h2 class="hero-title">One Cat. A Thousand Years. Infinite Mischief.</h2>
+                    <p class="hero-subtitle">For most, exile is a punishment. For Max, it's an inconvenience. Once a respected (and exceptionally lazy) demon, Max was cast out of Hell and sentenced to a millennium on Earth—stuck in the form of a black cat.</p>
+                    <p class="hero-description">From medieval courts to modern cities, Max has left his mark on history in ways most will never realize. These are his stories.</p>
+                    <button class="cta-button" onclick="scrollToSection('comics')">Explore the Chronicles</button>
+                </div>
+                <div class="hero-image">
+                    <img src="max-hero.png" alt="Max the Demon Cat" class="max-hero-image">
+                </div>
+            </div>
+        </section>
+
+        <!-- Comics Section -->
+        <section id="comics" class="comics-section">
+            <div class="container">
+                
+                <!-- Latest Comic Showcase -->
+                <div class="latest-comic-section">
+                    <h3 class="latest-comic-title">Latest Comic</h3>
+                    <div class="featured-comic" id="featured-comic">
+                        <div class="comic-info">
+                            <div class="comic-image">
+                                <!-- Image will be inserted here by JavaScript -->
+                            </div>
+                            <h3 class="comic-title">"The Coffee Incident"</h3>
+                            <p class="comic-date">Published: Today</p>
+                            <p class="comic-description">Max demonstrates his mastery of chaos by turning a simple morning routine into a supernatural disaster.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Series Navigation -->
+                <div class="series-navigation">
+                    <h3 class="series-navigation-title">Browse by Series</h3>
+                    <div class="series-tabs" id="series-tabs">
+                        <!-- Series tabs will be populated automatically -->
+                    </div>
+                </div>
+
+                <!-- Selected Series Episodes -->
+                <div class="episodes-section" id="episodes-section">
+                    <h3 class="episodes-title" id="episodes-title">Select a series to view episodes</h3>
+                    <div class="comic-grid" id="comic-grid">
+                        <!-- Comics will be populated automatically from selected series -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Short Stories Section -->
+        <section id="stories" class="stories-section">
+            <div class="container">
+                <h2 class="section-title">Short Stories</h2>
+                <p class="section-subtitle">Dive deeper into the absurd tales of Max's exile</p>
+                
+                <div class="stories-grid">
+                    <div class="story-card">
+                        <div class="story-preview">
+                            <div class="story-icon">📜</div>
+                        </div>
+                        <h3>"The Great Fire of London"</h3>
+                        <p>Max's perspective on the 1666 disaster. Spoiler: he didn't start it, but he definitely made it worse.</p>
+                        <span class="story-date">1666 AD</span>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="story-preview">
+                            <div class="story-icon">⚔️</div>
+                        </div>
+                        <h3>"The Trojan Cat"</h3>
+                        <p>How Max infiltrated Troy and may or may not have been responsible for the whole horse incident.</p>
+                        <span class="story-date">1184 BC</span>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="story-preview">
+                            <div class="story-icon">🏰</div>
+                        </div>
+                        <h3>"The Castle Catastrophe"</h3>
+                        <p>Medieval times were boring until Max arrived. This is the story of how he accidentally started the Hundred Years' War.</p>
+                        <span class="story-date">1337 AD</span>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="story-preview">
+                            <div class="story-icon">🚀</div>
+                        </div>
+                        <h3>"The Space Race"</h3>
+                        <p>Max's brief stint as a NASA mascot and how he almost derailed the moon landing with a well-timed yawn.</p>
+                        <span class="story-date">1969 AD</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Artwork Section -->
+        <section id="artwork" class="artwork-section">
+            <div class="container">
+                <h2 class="section-title">Artwork</h2>
+                <p class="section-subtitle">See concept sketches and illustrations of Max throughout the ages</p>
+                
+                <!-- Artwork Notice -->
+                <div class="artwork-notice">
+                    <div class="artwork-icon">🎨</div>
+                    <p>Browse official artwork and fan creations from the community!</p>
+                </div>
+                
+                <div class="artwork-tabs">
+                    <button class="artwork-tab active" data-tab="official">Official Art</button>
+                    <button class="artwork-tab" data-tab="fanart">Fan Art</button>
+                </div>
+
+                <div class="artwork-content">
+                    <div class="artwork-panel active" id="official-art">
+                        <div class="artwork-grid" id="official-artwork-grid">
+                            <!-- Official artwork will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="artwork-panel" id="fanart-art">
+                        <div class="artwork-grid" id="fanart-grid">
+                            <!-- Fan art will be loaded here -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>The Chronicles of Max</h3>
+                    <p>Where chaos meets comedy, and demon cats rule the internet.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Max's Mischief</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link">Twitter</a>
+                        <a href="#" class="social-link">Instagram</a>
+                        <a href="#" class="social-link">Patreon</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#comics">Comics</a></li>
+                        <li><a href="#stories">Short Stories</a></li>
+                        <li><a href="#artwork">Artwork</a></li>
+                        <li><a href="#" onclick="refreshContent(); return false;">Refresh Content</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 The Chronicles of Max. All rights reserved. Max owns your soul now.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
