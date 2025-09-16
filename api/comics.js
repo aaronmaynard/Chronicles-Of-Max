@@ -40,12 +40,15 @@ module.exports = async (req, res) => {
                             const number = match ? parseInt(match[1]) : 0;
                             const title = match ? match[2] : path.parse(file).name;
                             
+                            // Use GitHub raw URLs for comic images
+                            const githubPath = `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/comics/${encodeURIComponent(seriesName)}/${encodeURIComponent(file)}`;
+                            
                             comics.push({
                                 number: number,
                                 title: title,
                                 filename: file,
-                                path: `/comics/${seriesName}/${file}`,
-                                thumbnail: null,
+                                path: githubPath,
+                                thumbnail: githubPath, // Use the actual comic image as thumbnail
                                 extension: path.extname(file),
                                 fileSize: stats.size,
                                 lastModified: stats.mtime.toISOString(),

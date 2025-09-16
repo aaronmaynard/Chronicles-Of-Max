@@ -33,8 +33,11 @@ module.exports = async (req, res) => {
                     let description = '';
                     
                     if (fileExtension === '.pdf') {
-                        // For PDFs, just use filename as title for now
-                        description = `PDF file: ${file}`;
+                        // For PDFs, try to extract basic info from filename
+                        const nameWithoutExt = path.parse(file).name;
+                        // Try to extract title from filename (remove common patterns)
+                        title = nameWithoutExt.replace(/[-_]/g, ' ');
+                        description = `PDF story: ${title}`;
                     } else {
                         // Handle text files
                         const content = await fs.readFile(filePath, 'utf8');
@@ -68,11 +71,16 @@ module.exports = async (req, res) => {
                         }
                     }
                     
+                    // For PDFs, use GitHub raw URL; for others, use relative path
+                    const filePath = fileExtension === '.pdf' 
+                        ? `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`
+                        : `/stories/${file}`;
+                    
                     stories.push({
                         title: title,
                         author: author,
                         filename: file,
-                        path: `/stories/${file}`,
+                        path: filePath,
                         description: description,
                         fileSize: stats.size,
                         lastModified: stats.mtime.toISOString(),
