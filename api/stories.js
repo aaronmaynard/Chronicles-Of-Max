@@ -11,6 +11,7 @@ function cleanRTFContent(rtfContent) {
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
     
+    console.log('RTF Cleaned Content (first 500 chars):', cleanText.substring(0, 500));
     return cleanText;
 }
 
@@ -47,12 +48,16 @@ module.exports = async (req, res) => {
                     
                     if (fileExtension === '.rtf') {
                         // Handle RTF files
+                        console.log(`Processing RTF file: ${file}`);
                         const rtfContent = await fs.readFile(filePath, 'utf8');
+                        console.log('Raw RTF content (first 200 chars):', rtfContent.substring(0, 200));
                         const cleanContent = cleanRTFContent(rtfContent);
                         const lines = cleanContent.split('\n').map(line => line.trim()).filter(line => line);
+                        console.log('RTF lines:', lines.slice(0, 10));
                         
                         // Check if this is Google Docs format (starts with "Chronicles of Max")
                         if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
+                            console.log('Found Google Docs format in RTF');
                             // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
                             if (lines[2].toLowerCase().startsWith('author: ')) {
                                 author = lines[2].substring(lines[2].indexOf(': ') + 2);
@@ -76,9 +81,11 @@ module.exports = async (req, res) => {
                             }
                         } else {
                             // Fallback for non-Google Docs format RTF files
+                            console.log('RTF file not in Google Docs format, using fallback');
                             const nameWithoutExt = path.parse(file).name;
                             title = nameWithoutExt.replace(/[-_]/g, ' ');
                             description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
+                            console.log('RTF fallback - title:', title, 'description:', description);
                         }
                     } else if (fileExtension === '.pdf') {
                         // For PDFs, provide better fallback content based on filename
