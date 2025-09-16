@@ -1,21 +1,41 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-// Function to clean HTML content by removing tags and extracting text
-function cleanHTMLContent(htmlContent) {
-    // Remove HTML tags and extract clean text
-    let cleanText = htmlContent
-        .replace(/<[^>]*>/g, ' ') // Remove HTML tags
-        .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
-        .replace(/&amp;/g, '&') // Replace HTML entities
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/\s+/g, ' ') // Normalize whitespace
-        .trim();
+// Function to parse HTML content using specific CSS classes
+function parseHTMLContent(htmlContent) {
+    // Extract author from <p class="c6 subtitle"> with <span> tags
+    const authorMatch = htmlContent.match(/<p class="c6 subtitle"[^>]*>.*?<span[^>]*>Author<\/span>.*?<span[^>]*>([^<]*):?<\/span>/s);
+    const author = authorMatch ? authorMatch[1].replace(/:\s*$/, '').trim() : 'Unknown';
     
-    return cleanText;
+    // Extract title from <h1 class="c2"> with <span> tag
+    const titleMatch = htmlContent.match(/<h1 class="c2"[^>]*>.*?<span[^>]*>([^<]*)<\/span>/s);
+    const title = titleMatch ? titleMatch[1].trim() : 'Unknown Title';
+    
+    // Extract story content after the <h1> tag
+    const h1EndIndex = htmlContent.indexOf('</h1>');
+    if (h1EndIndex !== -1) {
+        const contentAfterH1 = htmlContent.substring(h1EndIndex + 5);
+        // Find the first <p> tag after the h1
+        const pMatch = contentAfterH1.match(/<p[^>]*>([^<]*(?:<[^>]*>[^<]*)*?)<\/p>/s);
+        if (pMatch) {
+            // Clean the content by removing HTML tags
+            let cleanContent = pMatch[1]
+                .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+                .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+                .replace(/&amp;/g, '&') // Replace HTML entities
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\s+/g, ' ') // Normalize whitespace
+                .trim();
+            
+            return { author, title, content: cleanContent };
+        }
+    }
+    
+    // Fallback if parsing fails
+    return { author: 'Unknown', title: 'Unknown Title', content: '' };
 }
 
 module.exports = async (req, res) => {
@@ -52,45 +72,19 @@ module.exports = async (req, res) => {
                     // Handle HTML files
                     console.log(`Processing HTML file: ${file}`);
                     const htmlContent = await fs.readFile(filePath, 'utf8');
-                    const cleanContent = cleanHTMLContent(htmlContent);
-                    const lines = cleanContent.split('\n').map(line => line.trim()).filter(line => line);
-                    console.log('HTML lines:', lines.slice(0, 10));
+                    const parsed = parseHTMLContent(htmlContent);
                     
-                    // Check if this is Google Docs format (starts with "Chronicles of Max")
-                    if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
-                        console.log('Found Google Docs format in HTML');
-                        // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
-                        if (lines[2].toLowerCase().startsWith('author: ')) {
-                            author = lines[2].substring(lines[2].indexOf(': ') + 2);
-                        }
-                        
-                        // Find the actual story title (first heading after the header)
-                        let storyStartIndex = 4;
-                        for (let i = 4; i < lines.length; i++) {
-                            if (lines[i] && !lines[i].startsWith('http')) {
-                                title = lines[i];
-                                storyStartIndex = i + 1;
-                                break;
-                            }
-                        }
-                        
-                        // Get description from the first few lines of actual story content
-                        const storyContent = lines.slice(storyStartIndex).join(' ');
-                        description = storyContent.substring(0, 200);
-                        if (storyContent.length > 200) {
-                            description += '...';
-                        }
-                    } else {
-                        // Fallback for non-Google Docs format HTML files
-                        console.log('HTML file not in Google Docs format, using fallback');
-                        const nameWithoutExt = path.parse(file).name;
-                        title = nameWithoutExt.replace(/[-_]/g, ' ');
-                        description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
-                        console.log('HTML fallback - title:', title, 'description:', description);
+                    title = parsed.title;
+                    author = parsed.author;
+                    description = parsed.content.substring(0, 200);
+                    if (parsed.content.length > 200) {
+                        description += '...';
                     }
                     
-                    // For HTML files, use GitHub raw URL
-                    const storyUrl = `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`;
+                    console.log('Parsed HTML - Title:', title, 'Author:', author, 'Description length:', description.length);
+                    
+                    // For HTML files, use GitHub download URL
+                    const storyUrl = `https://github.com/aaronmaynard/Chronicles-Of-Max/raw/main/literature/${file}`;
                     
                     stories.push({
                         title: title,
