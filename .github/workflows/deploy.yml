@@ -28,34 +28,5 @@ jobs:
         # Test that the server can start and scan files
         timeout 15s npm start || true
         
-  deploy-to-vercel:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.ORG_ID }}
-        vercel-project-id: ${{ secrets.PROJECT_ID }}
-        working-directory: ./
-        
-  deploy-to-railway:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Deploy to Railway
-      uses: railwayapp/railway-deploy@v1
-      with:
-        railway-token: ${{ secrets.RAILWAY_TOKEN }}
-        service: chronicles-of-max
+  # Vercel automatically deploys when you push to main branch
+  # No additional deployment steps needed since Vercel is connected to GitHub
