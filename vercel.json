@@ -2,22 +2,34 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "api/comics.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/stories.js", 
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/artwork.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/comics",
+      "dest": "/api/comics.js"
+    },
+    {
+      "src": "/api/stories",
+      "dest": "/api/stories.js"
+    },
+    {
+      "src": "/api/artwork",
+      "dest": "/api/artwork.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/index.html"
     }
-  ],
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
