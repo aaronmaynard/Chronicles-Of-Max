@@ -1,6 +1,19 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+// Function to clean RTF content by removing formatting codes
+function cleanRTFContent(rtfContent) {
+    // Remove RTF header and control groups
+    let cleanText = rtfContent
+        .replace(/\\[a-z]+\d*\s?/g, ' ') // Remove RTF control words like \b, \f1, etc.
+        .replace(/[{}]/g, ' ') // Remove braces
+        .replace(/\\[^a-z\s]/g, ' ') // Remove other RTF escape sequences
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+    
+    return cleanText;
+}
+
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -19,7 +32,7 @@ module.exports = async (req, res) => {
             const files = await fs.readdir(storiesPath);
             const textFiles = files.filter(file => {
                 const ext = path.extname(file).toLowerCase();
-                return ['.txt', '.md', '.html', '.pdf'].includes(ext);
+                return ['.txt', '.md', '.html', '.pdf', '.rtf'].includes(ext);
             });
 
             for (const file of textFiles) {
@@ -32,7 +45,42 @@ module.exports = async (req, res) => {
                     let author = 'Unknown';
                     let description = '';
                     
-                    if (fileExtension === '.pdf') {
+                    if (fileExtension === '.rtf') {
+                        // Handle RTF files
+                        const rtfContent = await fs.readFile(filePath, 'utf8');
+                        const cleanContent = cleanRTFContent(rtfContent);
+                        const lines = cleanContent.split('\n').map(line => line.trim()).filter(line => line);
+                        
+                        // Check if this is Google Docs format (starts with "Chronicles of Max")
+                        if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
+                            // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
+                            if (lines[2].toLowerCase().startsWith('author: ')) {
+                                author = lines[2].substring(lines[2].indexOf(': ') + 2);
+                            }
+                            
+                            // Find the actual story title (first heading after the header)
+                            let storyStartIndex = 4;
+                            for (let i = 4; i < lines.length; i++) {
+                                if (lines[i] && !lines[i].startsWith('http')) {
+                                    title = lines[i];
+                                    storyStartIndex = i + 1;
+                                    break;
+                                }
+                            }
+                            
+                            // Get description from the first few lines of actual story content
+                            const storyContent = lines.slice(storyStartIndex).join(' ');
+                            description = storyContent.substring(0, 200);
+                            if (storyContent.length > 200) {
+                                description += '...';
+                            }
+                        } else {
+                            // Fallback for non-Google Docs format RTF files
+                            const nameWithoutExt = path.parse(file).name;
+                            title = nameWithoutExt.replace(/[-_]/g, ' ');
+                            description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
+                        }
+                    } else if (fileExtension === '.pdf') {
                         // For PDFs, provide better fallback content based on filename
                         const nameWithoutExt = path.parse(file).name;
                         title = nameWithoutExt.replace(/[-_]/g, ' ');
@@ -90,8 +138,8 @@ module.exports = async (req, res) => {
                         }
                     }
                     
-                    // For PDFs, use GitHub raw URL; for others, use relative path
-                    const filePath = fileExtension === '.pdf' 
+                    // For PDFs and RTFs, use GitHub raw URL; for others, use relative path
+                    const filePath = (fileExtension === '.pdf' || fileExtension === '.rtf')
                         ? `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`
                         : `/stories/${file}`;
                     
