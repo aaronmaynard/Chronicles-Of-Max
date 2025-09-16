@@ -4,9 +4,37 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/comics/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/stories/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/artwork/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/thumbnails/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|pdf|txt|md))",
+      "dest": "/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "server.js"

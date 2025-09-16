@@ -555,8 +555,13 @@ app.get('/thumbnails/:series/:filename', (req, res) => {
     res.sendFile(filePath);
 });
 
-// Serve main page
+// Serve the main page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Handle all other routes by serving index.html (for client-side routing)
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
