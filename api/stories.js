@@ -1,17 +1,20 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-// Function to clean RTF content by removing formatting codes
-function cleanRTFContent(rtfContent) {
-    // Remove RTF header and control groups
-    let cleanText = rtfContent
-        .replace(/\\[a-z]+\d*\s?/g, ' ') // Remove RTF control words like \b, \f1, etc.
-        .replace(/[{}]/g, ' ') // Remove braces
-        .replace(/\\[^a-z\s]/g, ' ') // Remove other RTF escape sequences
+// Function to clean HTML content by removing tags and extracting text
+function cleanHTMLContent(htmlContent) {
+    // Remove HTML tags and extract clean text
+    let cleanText = htmlContent
+        .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+        .replace(/&amp;/g, '&') // Replace HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
     
-    console.log('RTF Cleaned Content (first 500 chars):', cleanText.substring(0, 500));
     return cleanText;
 }
 
@@ -33,7 +36,7 @@ module.exports = async (req, res) => {
             const files = await fs.readdir(storiesPath);
             const textFiles = files.filter(file => {
                 const ext = path.extname(file).toLowerCase();
-                return ['.txt', '.md', '.html', '.rtf'].includes(ext);
+                return ext === '.html';
             });
 
             for (const file of textFiles) {
@@ -46,84 +49,48 @@ module.exports = async (req, res) => {
                     let author = 'Unknown';
                     let description = '';
                     
-                    if (fileExtension === '.rtf') {
-                        // Handle RTF files
-                        console.log(`Processing RTF file: ${file}`);
-                        const rtfContent = await fs.readFile(filePath, 'utf8');
-                        console.log('Raw RTF content (first 200 chars):', rtfContent.substring(0, 200));
-                        const cleanContent = cleanRTFContent(rtfContent);
-                        const lines = cleanContent.split('\n').map(line => line.trim()).filter(line => line);
-                        console.log('RTF lines:', lines.slice(0, 10));
+                    // Handle HTML files
+                    console.log(`Processing HTML file: ${file}`);
+                    const htmlContent = await fs.readFile(filePath, 'utf8');
+                    const cleanContent = cleanHTMLContent(htmlContent);
+                    const lines = cleanContent.split('\n').map(line => line.trim()).filter(line => line);
+                    console.log('HTML lines:', lines.slice(0, 10));
+                    
+                    // Check if this is Google Docs format (starts with "Chronicles of Max")
+                    if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
+                        console.log('Found Google Docs format in HTML');
+                        // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
+                        if (lines[2].toLowerCase().startsWith('author: ')) {
+                            author = lines[2].substring(lines[2].indexOf(': ') + 2);
+                        }
                         
-                        // Check if this is Google Docs format (starts with "Chronicles of Max")
-                        if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
-                            console.log('Found Google Docs format in RTF');
-                            // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
-                            if (lines[2].toLowerCase().startsWith('author: ')) {
-                                author = lines[2].substring(lines[2].indexOf(': ') + 2);
+                        // Find the actual story title (first heading after the header)
+                        let storyStartIndex = 4;
+                        for (let i = 4; i < lines.length; i++) {
+                            if (lines[i] && !lines[i].startsWith('http')) {
+                                title = lines[i];
+                                storyStartIndex = i + 1;
+                                break;
                             }
-                            
-                            // Find the actual story title (first heading after the header)
-                            let storyStartIndex = 4;
-                            for (let i = 4; i < lines.length; i++) {
-                                if (lines[i] && !lines[i].startsWith('http')) {
-                                    title = lines[i];
-                                    storyStartIndex = i + 1;
-                                    break;
-                                }
-                            }
-                            
-                            // Get description from the first few lines of actual story content
-                            const storyContent = lines.slice(storyStartIndex).join(' ');
-                            description = storyContent.substring(0, 200);
-                            if (storyContent.length > 200) {
-                                description += '...';
-                            }
-                        } else {
-                            // Fallback for non-Google Docs format RTF files
-                            console.log('RTF file not in Google Docs format, using fallback');
-                            const nameWithoutExt = path.parse(file).name;
-                            title = nameWithoutExt.replace(/[-_]/g, ' ');
-                            description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
-                            console.log('RTF fallback - title:', title, 'description:', description);
+                        }
+                        
+                        // Get description from the first few lines of actual story content
+                        const storyContent = lines.slice(storyStartIndex).join(' ');
+                        description = storyContent.substring(0, 200);
+                        if (storyContent.length > 200) {
+                            description += '...';
                         }
                     } else {
-                        // Handle text files
-                        const content = await fs.readFile(filePath, 'utf8');
-                        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-                        
-                        // Check if this is Google Docs format
-                        if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
-                            // Extract author
-                            if (lines[2].toLowerCase().startsWith('author: ')) {
-                                author = lines[2].substring(lines[2].indexOf(': ') + 2);
-                            }
-                            
-                            // Find story title
-                            let storyStartIndex = 4;
-                            for (let i = 4; i < lines.length; i++) {
-                                if (lines[i] && !lines[i].startsWith('http')) {
-                                    title = lines[i];
-                                    storyStartIndex = i + 1;
-                                    break;
-                                }
-                            }
-                            
-                            // Get description
-                            const storyContent = lines.slice(storyStartIndex).join(' ');
-                            description = storyContent.substring(0, 200);
-                            if (storyContent.length > 200) {
-                                description += '...';
-                            }
-                        } else {
-                            description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
-                        }
+                        // Fallback for non-Google Docs format HTML files
+                        console.log('HTML file not in Google Docs format, using fallback');
+                        const nameWithoutExt = path.parse(file).name;
+                        title = nameWithoutExt.replace(/[-_]/g, ' ');
+                        description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
+                        console.log('HTML fallback - title:', title, 'description:', description);
                     }
                     
-                    // For RTFs, use GitHub raw URL; for others, use relative path
-                    const storyUrl = fileExtension === '.rtf'
-                        ? `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`
-                        : `/stories/${file}`;
+                    // For HTML files, use GitHub raw URL
+                    const storyUrl = `https://raw.githubusercontent.com/aaronmaynard/Chronicles-Of-Max/main/literature/${file}`;
                     
                     stories.push({
                         title: title,
