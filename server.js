@@ -565,14 +565,36 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`🎭 The Chronicles of Max server running on http://localhost:${PORT}`);
-    console.log(`📚 Comics will be served from: ${scanner.comicsPath}`);
-    console.log(`📖 Stories will be served from: ${scanner.storiesPath}`);
-    console.log(`🖼️  Thumbnails will be generated in: ${scanner.thumbnailsPath}`);
-    
-    // Initial scan
+// Export for Vercel
+module.exports = app;
+
+// Start server (only in development)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`🎭 The Chronicles of Max server running on http://localhost:${PORT}`);
+        console.log(`📚 Comics will be served from: ${scanner.comicsPath}`);
+        console.log(`📖 Stories will be served from: ${scanner.storiesPath}`);
+        console.log(`🖼️  Thumbnails will be generated in: ${scanner.thumbnailsPath}`);
+        
+        // Initial scan
+        scanner.scanComics().then(data => {
+            comicData = data;
+            lastScanTime = Date.now();
+            console.log(`✅ Found ${data.series.length} comic series`);
+        });
+        
+        scanner.scanStories().then(data => {
+            storyData = data;
+            console.log(`✅ Found ${data.stories.length} stories`);
+        });
+        
+        scanner.scanArtwork().then(data => {
+            artworkData = data;
+            console.log(`✅ Found ${data.artwork.official.length} official artwork, ${data.artwork.fanart.length} fan art`);
+        });
+    });
+} else {
+    // In production (Vercel), initialize data immediately
     scanner.scanComics().then(data => {
         comicData = data;
         lastScanTime = Date.now();
@@ -588,4 +610,4 @@ app.listen(PORT, () => {
         artworkData = data;
         console.log(`✅ Found ${data.artwork.official.length} official artwork, ${data.artwork.fanart.length} fan art`);
     });
-});
+}
