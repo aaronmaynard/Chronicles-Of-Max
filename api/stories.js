@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const pdfParse = require('pdf-parse');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -33,11 +34,49 @@ module.exports = async (req, res) => {
                     let description = '';
                     
                     if (fileExtension === '.pdf') {
-                        // For PDFs, try to extract basic info from filename
-                        const nameWithoutExt = path.parse(file).name;
-                        // Try to extract title from filename (remove common patterns)
-                        title = nameWithoutExt.replace(/[-_]/g, ' ');
-                        description = `PDF story: ${title}`;
+                        try {
+                            // Parse PDF content
+                            const pdfBuffer = await fs.readFile(filePath);
+                            const pdfData = await pdfParse(pdfBuffer);
+                            const content = pdfData.text;
+                            const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+                            
+                            // Check if this is Google Docs format (starts with "Chronicles of Max")
+                            if (lines.length >= 4 && lines[0] === 'Chronicles of Max' && lines[1] === 'A Short Story') {
+                                // Extract author from line 2: "Author: {Author Name}" or "AUTHOR: {Author Name}"
+                                if (lines[2].toLowerCase().startsWith('author: ')) {
+                                    author = lines[2].substring(lines[2].indexOf(': ') + 2);
+                                }
+                                
+                                // Find the actual story title (first heading after the header)
+                                let storyStartIndex = 4;
+                                for (let i = 4; i < lines.length; i++) {
+                                    if (lines[i] && !lines[i].startsWith('http')) {
+                                        title = lines[i];
+                                        storyStartIndex = i + 1;
+                                        break;
+                                    }
+                                }
+                                
+                                // Get description from the first few lines of actual story content
+                                const storyContent = lines.slice(storyStartIndex).join(' ');
+                                description = storyContent.substring(0, 200);
+                                if (storyContent.length > 200) {
+                                    description += '...';
+                                }
+                            } else {
+                                // Fallback for non-Google Docs format PDFs
+                                const nameWithoutExt = path.parse(file).name;
+                                title = nameWithoutExt.replace(/[-_]/g, ' ');
+                                description = lines.slice(0, 3).join(' ').substring(0, 200) + '...';
+                            }
+                        } catch (error) {
+                            console.error(`Error parsing PDF ${file}:`, error);
+                            // Fallback to filename-based parsing
+                            const nameWithoutExt = path.parse(file).name;
+                            title = nameWithoutExt.replace(/[-_]/g, ' ');
+                            description = `PDF story: ${title}`;
+                        }
                     } else {
                         // Handle text files
                         const content = await fs.readFile(filePath, 'utf8');

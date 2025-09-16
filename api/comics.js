@@ -36,7 +36,8 @@ module.exports = async (req, res) => {
                             const stats = await fs.stat(filePath);
                             
                             // Extract episode number and title from filename
-                            const match = file.match(/^(\d+)\s*-\s*(.+?)\./);
+                            // Handle both "E01 - Title" and "01 - Title" formats
+                            const match = file.match(/^(?:E)?(\d+)\s*-\s*(.+?)\./);
                             const number = match ? parseInt(match[1]) : 0;
                             const title = match ? match[2] : path.parse(file).name;
                             
